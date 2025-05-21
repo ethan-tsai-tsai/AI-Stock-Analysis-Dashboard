@@ -22,9 +22,29 @@ def setup_ui():
     indicators = st.sidebar.multiselect(
         "Select Indicators",
         options=[
-            "20-day SMA", "20-Day EMA", "20-Day Bollinger Bands", "VWAP"
+            "SMA", "EMA", "Bollinger Bands", "VWAP",
+            "RSI", "MACD", "ROC", "CCI"
         ],
-        default=["20-day SMA"]
+        default=["SMA"]
     )
 
-    return tickers, start_date, end_date, indicators
+    # Indicator parameters
+    indicator_params = {}
+    if "SMA" in indicators:
+        indicator_params["SMA"] = st.sidebar.number_input("SMA Period", min_value=1, value=20)
+    if "EMA" in indicators:
+        indicator_params["EMA"] = st.sidebar.number_input("EMA Period", min_value=1, value=20)
+    if "Bollinger Bands" in indicators:
+        indicator_params["Bollinger_Bands"] = st.sidebar.number_input("Bollinger Bands Period", min_value=1, value=20)
+    if "RSI" in indicators:
+        indicator_params["RSI"] = st.sidebar.number_input("RSI Period", min_value=1, value=14)
+    if "MACD" in indicators:
+        indicator_params["MACD_Fast"] = st.sidebar.number_input("MACD Fast Period", min_value=1, value=12)
+        indicator_params["MACD_Slow"] = st.sidebar.number_input("MACD Slow Period", min_value=1, value=26)
+        indicator_params["MACD_Signal"] = st.sidebar.number_input("MACD Signal Period", min_value=1, value=9)
+    if "ROC" in indicators:
+        indicator_params["ROC"] = st.sidebar.number_input("ROC Period", min_value=1, value=12)
+    if "CCI" in indicators:
+        indicator_params["CCI"] = st.sidebar.number_input("CCI Period", min_value=1, value=20)
+
+    return tickers, start_date, end_date, indicators, indicator_params

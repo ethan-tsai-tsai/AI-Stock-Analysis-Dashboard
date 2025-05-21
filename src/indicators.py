@@ -1,9 +1,23 @@
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 import json
 
-def calculate_indicators(data, indicators):
-    fig = go.Figure(data=[
+def calculate_indicators(data, indicators, indicator_params):
+    # Clear any existing figures
+    go.Figure().data = []
+    go.Figure().layout = {}
+    
+    # Create figure with subplots
+    fig = make_subplots(
+        rows=2, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.05,
+        row_heights=[0.7, 0.3]
+    )
+    
+    # Add candlestick to main chart (row 1)
+    fig.add_trace(
         go.Candlestick(
             x=data.index,
             open=data['Open'],
@@ -11,39 +25,100 @@ def calculate_indicators(data, indicators):
             low=data['Low'],
             close=data['Close'],
             name="Candlestick"
-        )
-    ])
+        ),
+        row=1, col=1
+    )
     
     indicators_summary = {}
+
+    def calculate_rsi(data, window):
+        delta = data['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+        rs = gain / loss
+        return 100 - (100 / (1 + rs))
+
+    def calculate_macd(data, fast, slow, signal):
+        ema_fast = data['Close'].ewm(span=fast).mean()
+        ema_slow = data['Close'].ewm(span=slow).mean()
+        macd = ema_fast - ema_slow
+        signal_line = macd.ewm(span=signal).mean()
+        return macd, signal_line
+
+    def calculate_roc(data, window):
+        return ((data['Close'] - data['Close'].shift(window)) / data['Close'].shift(window)) * 100
+
+    def calculate_cci(data, window):
+        tp = (data['High'] + data['Low'] + data['Close']) / 3
+        sma = tp.rolling(window=window).mean()
+        mad = tp.rolling(window=window).apply(lambda x: abs(x - x.mean()).mean())
+        return (tp - sma) / (0.015 * mad)
     
     def add_indicator(indicator):
         nonlocal indicators_summary
-        if indicator == "20-day SMA":
-            sma = data['Close'].rolling(window=20).mean()
-            fig.add_trace(go.Scatter(x=data.index, y=sma, mode='lines', name='SMA(20)'))
-            indicators_summary["20-day_SMA"] = sma.values.tolist()
-        elif indicator == "20-Day EMA":
-            ema = data['Close'].ewm(span=20).mean()
-            fig.add_trace(go.Scatter(x=data.index, y=ema, mode='lines', name='EMA(20)'))
-            indicators_summary["20-day_EMA"] = ema.values.tolist()
-        elif indicator == "20-Day Bollinger Bands":
-            sma = data['Close'].rolling(window=20).mean()
-            std = data['Close'].rolling(window=20).std()
+        if indicator == "SMA":
+            period = indicator_params["SMA"]
+            sma = data['Close'].rolling(window=period).mean()
+            fig.add_trace(go.Scatter(x=data.index, y=sma, mode='lines', name=f'SMA({period})'), row=1, col=1)
+            indicators_summary[f"SMA_{period}"] = sma.values.tolist()
+        elif indicator == "EMA":
+            period = indicator_params["EMA"]
+            ema = data['Close'].ewm(span=period).mean()
+            fig.add_trace(go.Scatter(x=data.index, y=ema, mode='lines', name=f'EMA({period})'), row=1, col=1)
+            indicators_summary[f"EMA_{period}"] = ema.values.tolist()
+        elif indicator == "Bollinger Bands":
+            period = indicator_params["Bollinger_Bands"]
+            sma = data['Close'].rolling(window=period).mean()
+            std = data['Close'].rolling(window=period).std()
             upper_band = sma + (std * 2)
             lower_band = sma - (std * 2)
-            fig.add_trace(go.Scatter(x=data.index, y=upper_band, mode='lines', name='Upper Band'))
-            fig.add_trace(go.Scatter(x=data.index, y=lower_band, mode='lines', name='Lower Band'))
-            indicators_summary["20-day_Bollinger_Bands"] = {
+            fig.add_trace(go.Scatter(x=data.index, y=upper_band, mode='lines', name=f'Upper Band({period})'), row=1, col=1)
+            fig.add_trace(go.Scatter(x=data.index, y=lower_band, mode='lines', name=f'Lower Band({period})'), row=1, col=1)
+            indicators_summary[f"Bollinger_Bands_{period}"] = {
                 "upper_band": upper_band.values.tolist(),
                 "lower_band": lower_band.values.tolist()
             }
         elif indicator == "VWAP":
             data['VWAP'] = (data['Close'] * data['Volume']).cumsum() / data['Volume'].cumsum()
-            fig.add_trace(go.Scatter(x=data.index, y=data['VWAP'], mode='lines', name='VWAP'))
+            fig.add_trace(go.Scatter(x=data.index, y=data['VWAP'], mode='lines', name='VWAP'), row=1, col=1)
             indicators_summary["VWAP"] = data['VWAP'].values.tolist()
+        elif indicator == "RSI":
+            period = indicator_params["RSI"]
+            rsi = calculate_rsi(data, period)
+            fig.add_trace(go.Scatter(x=data.index, y=rsi, mode='lines', name=f'RSI({period})'), row=2, col=1)
+            indicators_summary[f"RSI_{period}"] = rsi.values.tolist()
+        elif indicator == "MACD":
+            fast = indicator_params["MACD_Fast"]
+            slow = indicator_params["MACD_Slow"]
+            signal = indicator_params["MACD_Signal"]
+            macd, signal_line = calculate_macd(data, fast, slow, signal)
+            fig.add_trace(go.Scatter(x=data.index, y=macd, mode='lines', name=f'MACD({fast},{slow})'), row=2, col=1)
+            fig.add_trace(go.Scatter(x=data.index, y=signal_line, mode='lines', name=f'Signal({signal})'), row=2, col=1)
+            indicators_summary["MACD"] = {
+                "MACD": macd.values.tolist(),
+                "Signal": signal_line.values.tolist(),
+                "params": {"fast": fast, "slow": slow, "signal": signal}
+            }
+        elif indicator == "ROC":
+            period = indicator_params["ROC"]
+            roc = calculate_roc(data, period)
+            fig.add_trace(go.Scatter(x=data.index, y=roc, mode='lines', name=f'ROC({period})'), row=2, col=1)
+            indicators_summary[f"ROC_{period}"] = roc.values.tolist()
+        elif indicator == "CCI":
+            period = indicator_params["CCI"]
+            cci = calculate_cci(data, period)
+            fig.add_trace(go.Scatter(x=data.index, y=cci, mode='lines', name=f'CCI({period})'), row=2, col=1)
+            indicators_summary[f"CCI_{period}"] = cci.values.tolist()
     
     for ind in indicators:
         add_indicator(ind)
     
-    fig.update_layout(xaxis_rangeslider_visible=False)
+    # Update layout
+    fig.update_layout(
+        xaxis_rangeslider_visible=False,
+        height=800,
+        showlegend=True,
+        legend=dict(orientation="h", y=1.1)
+    )
+    fig.update_xaxes(rangeslider_visible=False, row=2, col=1)
     return fig, json.dumps(indicators_summary)
