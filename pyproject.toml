@@ -9,14 +9,11 @@ readme = "README.md"
 requires-python = ">=3.12,<4.0"
 dependencies = [
     "yfinance (>=0.2.61,<0.3.0)",
-    "langchain (>=0.3.25,<0.4.0)",
     "pandas (>=2.2.3,<3.0.0)",
-    "langchain-community (>=0.3.24,<0.4.0)",
     "openai (>=1.78.1,<2.0.0)",
-    "langgraph (>=0.4.3,<0.5.0)",
-    "langchain-openai (>=0.3.16,<0.4.0)",
     "streamlit (>=1.45.1,<2.0.0)",
-    "plotly (>=6.1.0,<7.0.0)"
+    "plotly (>=6.1.0,<7.0.0)",
+    "python-dotenv (>=1.1.0,<2.0.0)"
 ]
 
 
