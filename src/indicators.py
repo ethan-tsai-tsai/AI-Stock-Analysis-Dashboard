@@ -3,7 +3,7 @@ from plotly.subplots import make_subplots
 import pandas as pd
 import json
 
-def calculate_indicators(data, indicators, indicator_params):
+def calculate_indicators(data, indicators, indicator_params, ticker=""):
     # Clear any existing figures
     go.Figure().data = []
     go.Figure().layout = {}
@@ -66,7 +66,7 @@ def calculate_indicators(data, indicators, indicator_params):
         if indicator_type == "SMA":
             period = int(params.get("period", 20))
             sma = data['Close'].rolling(window=max(1, period)).mean()
-            fig.add_trace(go.Scatter(x=data.index, y=sma, mode='lines', name=f'SMA({period})'), row=1, col=1)
+            fig.add_trace(go.Scatter(x=data.index, y=sma, mode='lines', name=f'SMA({period})', uid=f'sma_{period}_{ticker}'), row=1, col=1)
             indicators_summary[f"SMA_{period}"] = sma.values.tolist()
         elif indicator_type == "EMA":
             period = int(params.get("period", 20))
