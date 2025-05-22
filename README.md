@@ -14,6 +14,31 @@ A Streamlit-based web application for technical stock analysis with AI-powered r
 
 ## Installation
 
+### Using Poetry (recommended)
+
+1. Clone the repository:
+```bash
+git clone https://github.com/your-repo/ai-stock-analysis.git
+cd ai-stock-analysis
+```
+
+2. Install Poetry if you don't have it:
+```bash
+pip install poetry
+```
+
+3. Install dependencies:
+```bash
+poetry install
+```
+
+4. Run the application:
+```bash
+poetry run streamlit run main.py
+```
+
+### Using pip
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/your-repo/ai-stock-analysis.git
@@ -29,6 +54,23 @@ pip install -r requirements.txt
 ```bash
 streamlit run main.py
 ```
+
+## Configuration
+
+1. Create a `.env` file by copying the example:
+```bash
+cp .env-example .env
+```
+
+2. Get your OpenRouter API key:
+   - Go to [OpenRouter website](https://openrouter.ai/)
+   - Sign up and log in to your account
+   - Navigate to "API Keys" section
+   - Create a new API key
+   - Copy the key and paste it in your `.env` file:
+     ```
+     OPENROUTER_API_KEY=your_api_key_here
+     ```
 
 ## Usage
 

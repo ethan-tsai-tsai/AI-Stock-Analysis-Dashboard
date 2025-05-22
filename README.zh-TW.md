@@ -14,6 +14,31 @@
 
 ## 安裝說明
 
+### 使用 Poetry (推薦)
+
+1. 克隆存儲庫:
+```bash
+git clone https://github.com/your-repo/ai-stock-analysis.git
+cd ai-stock-analysis
+```
+
+2. 安裝Poetry(如果尚未安裝):
+```bash
+pip install poetry
+```
+
+3. 安裝依賴項:
+```bash
+poetry install
+```
+
+4. 運行應用程式:
+```bash
+poetry run streamlit run main.py
+```
+
+### 使用 pip
+
 1. 克隆存儲庫:
 ```bash
 git clone https://github.com/your-repo/ai-stock-analysis.git
@@ -29,6 +54,23 @@ pip install -r requirements.txt
 ```bash
 streamlit run main.py
 ```
+
+## 配置設定
+
+1. 複製範例檔案建立.env:
+```bash
+cp .env-example .env
+```
+
+2. 獲取OpenRouter API金鑰:
+   - 前往 [OpenRouter網站](https://openrouter.ai/)
+   - 註冊並登入帳號
+   - 導航至"API Keys"部分
+   - 建立新的API金鑰
+   - 複製金鑰並貼到.env檔案中:
+     ```
+     OPENROUTER_API_KEY=your_api_key_here
+     ```
 
 ## 使用說明
 
