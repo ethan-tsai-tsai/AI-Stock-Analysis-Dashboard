@@ -56,14 +56,21 @@ def calculate_indicators(data, indicators, indicator_params):
     
     def add_indicator(indicator):
         nonlocal indicators_summary
-        if indicator == "SMA":
-            period = indicator_params["SMA"]
-            sma = data['Close'].rolling(window=period).mean()
+        if isinstance(indicator, dict):  # New format with ID
+            indicator_type = indicator["type"]
+            params = indicator["params"]
+        else:  # Old format (string)
+            indicator_type = indicator
+            params = indicator_params.get(indicator_type, {})
+        
+        if indicator_type == "SMA":
+            period = int(params.get("period", 20))
+            sma = data['Close'].rolling(window=max(1, period)).mean()
             fig.add_trace(go.Scatter(x=data.index, y=sma, mode='lines', name=f'SMA({period})'), row=1, col=1)
             indicators_summary[f"SMA_{period}"] = sma.values.tolist()
-        elif indicator == "EMA":
-            period = indicator_params["EMA"]
-            ema = data['Close'].ewm(span=period).mean()
+        elif indicator_type == "EMA":
+            period = int(params.get("period", 20))
+            ema = data['Close'].ewm(span=max(1, period)).mean()
             fig.add_trace(go.Scatter(x=data.index, y=ema, mode='lines', name=f'EMA({period})'), row=1, col=1)
             indicators_summary[f"EMA_{period}"] = ema.values.tolist()
         elif indicator == "Bollinger Bands":
@@ -83,14 +90,15 @@ def calculate_indicators(data, indicators, indicator_params):
             fig.add_trace(go.Scatter(x=data.index, y=data['VWAP'], mode='lines', name='VWAP'), row=1, col=1)
             indicators_summary["VWAP"] = data['VWAP'].values.tolist()
         elif indicator == "RSI":
-            period = indicator_params["RSI"]
-            rsi = calculate_rsi(data, period)
+            params = indicator_params.get(indicator, {"RSI": 14})  # Get the params dict for this indicator
+            period = int(params.get("RSI", 14))  # Get period from params dict
+            rsi = calculate_rsi(data, max(1, period))
             fig.add_trace(go.Scatter(x=data.index, y=rsi, mode='lines', name=f'RSI({period})'), row=2, col=1)
             indicators_summary[f"RSI_{period}"] = rsi.values.tolist()
         elif indicator == "MACD":
-            fast = indicator_params["MACD_Fast"]
-            slow = indicator_params["MACD_Slow"]
-            signal = indicator_params["MACD_Signal"]
+            fast = int(indicator_params["MACD_Fast"])
+            slow = int(indicator_params["MACD_Slow"])
+            signal = int(indicator_params["MACD_Signal"])
             macd, signal_line = calculate_macd(data, fast, slow, signal)
             fig.add_trace(go.Scatter(x=data.index, y=macd, mode='lines', name=f'MACD({fast},{slow})'), row=2, col=1)
             fig.add_trace(go.Scatter(x=data.index, y=signal_line, mode='lines', name=f'Signal({signal})'), row=2, col=1)
@@ -100,8 +108,8 @@ def calculate_indicators(data, indicators, indicator_params):
                 "params": {"fast": fast, "slow": slow, "signal": signal}
             }
         elif indicator == "ROC":
-            period = indicator_params["ROC"]
-            roc = calculate_roc(data, period)
+            period = int(indicator_params["ROC"])
+            roc = calculate_roc(data, max(1, period))
             fig.add_trace(go.Scatter(x=data.index, y=roc, mode='lines', name=f'ROC({period})'), row=2, col=1)
             indicators_summary[f"ROC_{period}"] = roc.values.tolist()
         elif indicator == "CCI":

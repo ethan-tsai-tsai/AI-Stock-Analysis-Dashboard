@@ -8,7 +8,7 @@ from src.indicators import calculate_indicators
 
 def main():
     # Setup UI and get user inputs
-    tickers, start_date, end_date, indicators, indicator_params, language, market = setup_ui()
+    tickers, start_date, end_date, indicators_list, indicator_params, language, market = setup_ui()
     
     # Fetch stock data
     stock_data = fetch_stock_data(tickers, start_date, end_date, market)
@@ -19,27 +19,35 @@ def main():
         
         # Process each stock
         overall_results = []
-        tab_name = ["Overall Summary"] + list(stock_data.keys())
+        tab_name = list(stock_data.keys()) + ["Overall Summary"]
         tabs = st.tabs(tab_name)
         
         for i, ticker in enumerate(stock_data):
             data = stock_data[ticker]
-            fig, indicator_summary = calculate_indicators(data, indicators, indicator_params)
+            fig, indicator_summary = calculate_indicators(data, st.session_state.indicators, indicator_params)
             
-            with tabs[i + 1]:
+            with tabs[i]:  # First tabs are for stock analysis
                 st.subheader(f"Analysis for {ticker}")
                 st.plotly_chart(fig)
                 
-                with st.spinner(f"Generating {language} analysis for {ticker}..."):
-                    result = analyze_with_llm(ticker, indicator_summary, language)
-                    justification = result.get("justification", "No justification provided.")
+                if st.button(f"Generate AI Analysis for {ticker}", key=f"analyze_{ticker}"):
+                    with st.spinner(f"Generating {language} analysis for {ticker}..."):
+                        result = analyze_with_llm(ticker, indicator_summary, language)
+                        st.session_state[f"analysis_{ticker}"] = result
                 
-                st.write("**Detailed Justification:**")
-                st.write_stream((c for c in justification))  # Stream the response character by character
+                if f"analysis_{ticker}" in st.session_state:
+                    result = st.session_state[f"analysis_{ticker}"]
+                    justification = result.get("justification", "No justification provided.")
+                    st.write("**Detailed Justification:**")
+                    st.write_stream((c for c in justification))
             
-            overall_results.append({"Stock": ticker, "Recommendation": result.get("action", "N/A")})
+            if f"analysis_{ticker}" in st.session_state:
+                result = st.session_state[f"analysis_{ticker}"]
+                overall_results.append({"Stock": ticker, "Recommendation": result.get("action", "N/A")})
+            else:
+                overall_results.append({"Stock": ticker, "Recommendation": "Not analyzed"})
         
-        with tabs[0]:
+        with tabs[-1]:  # Last tab is Overall Summary
             st.subheader("Overall Structured Recommendation")
             st.table(pd.DataFrame(overall_results))
     else:
