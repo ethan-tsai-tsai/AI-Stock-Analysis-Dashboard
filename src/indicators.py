@@ -8,13 +8,26 @@ def calculate_indicators(data, indicators, indicator_params, ticker=""):
     go.Figure().data = []
     go.Figure().layout = {}
     
-    # Create figure with subplots
-    fig = make_subplots(
-        rows=2, cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.05,
-        row_heights=[0.7, 0.3]
-    )
+    # Check if we have any indicators that go in the lower subplot
+    lower_plot_indicators = ["RSI", "MACD", "ROC", "CCI"]
+    has_lower_plot = False
+    if indicators:  # Check if indicators list is not empty
+        has_lower_plot = any(ind["type"] in lower_plot_indicators for ind in indicators) if isinstance(indicators[0], dict) \
+                        else any(ind in lower_plot_indicators for ind in indicators)
+    
+    # Create figure with dynamic subplots
+    if has_lower_plot:
+        fig = make_subplots(
+            rows=2, cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.05,
+            row_heights=[0.7, 0.3]
+        )
+    else:
+        fig = make_subplots(
+            rows=1, cols=1,
+            shared_xaxes=True
+        )
     
     # Add candlestick to main chart (row 1)
     fig.add_trace(
@@ -89,33 +102,36 @@ def calculate_indicators(data, indicators, indicator_params, ticker=""):
             data['VWAP'] = (data['Close'] * data['Volume']).cumsum() / data['Volume'].cumsum()
             fig.add_trace(go.Scatter(x=data.index, y=data['VWAP'], mode='lines', name='VWAP'), row=1, col=1)
             indicators_summary["VWAP"] = data['VWAP'].values.tolist()
-        elif indicator == "RSI":
-            params = indicator_params.get(indicator, {"RSI": 14})  # Get the params dict for this indicator
-            period = int(params.get("RSI", 14))  # Get period from params dict
+        elif indicator_type == "RSI":
+            period = int(params.get("period", 14))
             rsi = calculate_rsi(data, max(1, period))
-            fig.add_trace(go.Scatter(x=data.index, y=rsi, mode='lines', name=f'RSI({period})'), row=2, col=1)
+            row = 2 if has_lower_plot else 1
+            fig.add_trace(go.Scatter(x=data.index, y=rsi, mode='lines', name=f'RSI({period})'), row=row, col=1)
             indicators_summary[f"RSI_{period}"] = rsi.values.tolist()
-        elif indicator == "MACD":
-            fast = int(indicator_params["MACD_Fast"])
-            slow = int(indicator_params["MACD_Slow"])
-            signal = int(indicator_params["MACD_Signal"])
+        elif indicator_type == "MACD":
+            fast = int(params.get("fast", 12))
+            slow = int(params.get("slow", 26)) 
+            signal = int(params.get("signal", 9))
             macd, signal_line = calculate_macd(data, fast, slow, signal)
-            fig.add_trace(go.Scatter(x=data.index, y=macd, mode='lines', name=f'MACD({fast},{slow})'), row=2, col=1)
-            fig.add_trace(go.Scatter(x=data.index, y=signal_line, mode='lines', name=f'Signal({signal})'), row=2, col=1)
+            row = 2 if has_lower_plot else 1
+            fig.add_trace(go.Scatter(x=data.index, y=macd, mode='lines', name=f'MACD({fast},{slow})'), row=row, col=1)
+            fig.add_trace(go.Scatter(x=data.index, y=signal_line, mode='lines', name=f'Signal({signal})'), row=row, col=1)
             indicators_summary["MACD"] = {
                 "MACD": macd.values.tolist(),
                 "Signal": signal_line.values.tolist(),
                 "params": {"fast": fast, "slow": slow, "signal": signal}
             }
-        elif indicator == "ROC":
-            period = int(indicator_params["ROC"])
+        elif indicator_type == "ROC":
+            period = int(params.get("period", 12))
             roc = calculate_roc(data, max(1, period))
-            fig.add_trace(go.Scatter(x=data.index, y=roc, mode='lines', name=f'ROC({period})'), row=2, col=1)
+            row = 2 if has_lower_plot else 1
+            fig.add_trace(go.Scatter(x=data.index, y=roc, mode='lines', name=f'ROC({period})'), row=row, col=1)
             indicators_summary[f"ROC_{period}"] = roc.values.tolist()
-        elif indicator == "CCI":
-            period = indicator_params["CCI"]
+        elif indicator_type == "CCI":
+            period = int(params.get("period", 20))
             cci = calculate_cci(data, period)
-            fig.add_trace(go.Scatter(x=data.index, y=cci, mode='lines', name=f'CCI({period})'), row=2, col=1)
+            row = 2 if has_lower_plot else 1
+            fig.add_trace(go.Scatter(x=data.index, y=cci, mode='lines', name=f'CCI({period})'), row=row, col=1)
             indicators_summary[f"CCI_{period}"] = cci.values.tolist()
     
     for ind in indicators:

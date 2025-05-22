@@ -1,6 +1,6 @@
 [project]
 name = "stock-agent"
-version = "0.3.1"
+version = "0.3.2"
 description = ""
 authors = [
     {name = "Ethan.tsai",email = "turnips900518@gmail.com"}
