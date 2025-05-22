@@ -8,10 +8,10 @@ from src.indicators import calculate_indicators
 
 def main():
     # Setup UI and get user inputs
-    tickers, start_date, end_date, indicators, indicator_params, language = setup_ui()
+    tickers, start_date, end_date, indicators, indicator_params, language, market = setup_ui()
     
     # Fetch stock data
-    stock_data = fetch_stock_data(tickers, start_date, end_date)
+    stock_data = fetch_stock_data(tickers, start_date, end_date, market)
     
     if stock_data:
         st.session_state["stock_data"] = stock_data
@@ -25,13 +25,17 @@ def main():
         for i, ticker in enumerate(stock_data):
             data = stock_data[ticker]
             fig, indicator_summary = calculate_indicators(data, indicators, indicator_params)
-            result = analyze_with_llm(ticker, indicator_summary, language)
             
             with tabs[i + 1]:
                 st.subheader(f"Analysis for {ticker}")
                 st.plotly_chart(fig)
+                
+                with st.spinner(f"Generating {language} analysis for {ticker}..."):
+                    result = analyze_with_llm(ticker, indicator_summary, language)
+                    justification = result.get("justification", "No justification provided.")
+                
                 st.write("**Detailed Justification:**")
-                st.write(result.get("justification", "No justification provided."))
+                st.write_stream((c for c in justification))  # Stream the response character by character
             
             overall_results.append({"Stock": ticker, "Recommendation": result.get("action", "N/A")})
         

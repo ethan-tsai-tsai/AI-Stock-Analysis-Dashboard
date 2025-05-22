@@ -7,8 +7,16 @@ def setup_ui():
     st.title('Technical Stock Analysis Dashboard')
     st.sidebar.header("Configuration")
 
+    # Market type selection
+    market = st.sidebar.selectbox(
+        "Market Type",
+        options=["US Stocks", "TW Stocks"],
+        index=0
+    )
+
     # Input for stock tickers
-    tickers_input = st.sidebar.text_input("Enter stock tickers (comma-separated)", "AAPL, MSFT, GOOGL")
+    ticker_label = "Enter stock tickers (comma-separated)" + (" e.g. 2330, 2317" if market == "TW Stocks" else " e.g. AAPL, MSFT")
+    tickers_input = st.sidebar.text_input(ticker_label, "AAPL, MSFT" if market == "US Stocks" else "2330, 2317")
     tickers = [ticker.strip().upper() for ticker in tickers_input.split(',') if ticker.strip()]
 
     # Set the data range: start date and end date
@@ -54,4 +62,4 @@ def setup_ui():
     if "CCI" in indicators:
         indicator_params["CCI"] = st.sidebar.number_input("CCI Period", min_value=1, value=20)
 
-    return tickers, start_date, end_date, indicators, indicator_params, language
+    return tickers, start_date, end_date, indicators, indicator_params, language, market
