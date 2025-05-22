@@ -17,6 +17,13 @@ def setup_ui():
     start_date = st.sidebar.date_input('Start date', start_date_default)
     end_date = st.sidebar.date_input('End date', end_date_default)
 
+    # Language selection
+    language = st.sidebar.selectbox(
+        "Language",
+        options=["English", "繁體中文", "简体中文", "日本語"],
+        index=0
+    )
+
     # Technical indicators selection
     st.sidebar.subheader('Technical Indicators')
     indicators = st.sidebar.multiselect(
@@ -47,4 +54,4 @@ def setup_ui():
     if "CCI" in indicators:
         indicator_params["CCI"] = st.sidebar.number_input("CCI Period", min_value=1, value=20)
 
-    return tickers, start_date, end_date, indicators, indicator_params
+    return tickers, start_date, end_date, indicators, indicator_params, language

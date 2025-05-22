@@ -8,7 +8,7 @@ from src.indicators import calculate_indicators
 
 def main():
     # Setup UI and get user inputs
-    tickers, start_date, end_date, indicators, indicator_params = setup_ui()
+    tickers, start_date, end_date, indicators, indicator_params, language = setup_ui()
     
     # Fetch stock data
     stock_data = fetch_stock_data(tickers, start_date, end_date)
@@ -25,7 +25,7 @@ def main():
         for i, ticker in enumerate(stock_data):
             data = stock_data[ticker]
             fig, indicator_summary = calculate_indicators(data, indicators, indicator_params)
-            result = analyze_with_llm(ticker, indicator_summary)
+            result = analyze_with_llm(ticker, indicator_summary, language)
             
             with tabs[i + 1]:
                 st.subheader(f"Analysis for {ticker}")

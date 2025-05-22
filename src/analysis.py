@@ -1,15 +1,18 @@
 import json
-from src.config import client, MODEL_NAME
+from src.config import client, MODEL_NAME, LANGUAGES
 
-def analyze_with_llm(ticker, indicators_summary):
+def analyze_with_llm(ticker, indicators_summary, language="English"):
     # Update prompt asking for a detailed justification of technical analysis and recommendations
+    lang_code = LANGUAGES.get(language, "en")
+    
     analysis_prompt = (
         f"You are a Stock Trader specializing in Technical Analysis at a top financial institution. "
         f"Here is the summary of technical indicators for {ticker}:\n\n{indicators_summary}"
-        f"Provide a detailed justification of your analysis, explaining what patterns, signals, and trends you observe. "
+        f"Provide a detailed justification of your analysis in {language}, explaining what patterns, signals, and trends you observe. "
         f"Then, based analysis results, provide a recommendation from the following options: "
         f"'Strong Buy', 'Buy', 'Weak Buy', 'Hold', 'Weak Sell', 'Sell', or 'Strong Sell'. "
-        f"Return your output as a JSON object with two keys: 'action' and 'justification'."
+        f"Return your output as a JSON object with two keys: 'action' and 'justification'. "
+        f"IMPORTANT: Respond in {language} language (code: {lang_code})."
     )
 
     # Call the LLM with the image part and the analysis prompt
