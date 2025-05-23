@@ -1,6 +1,6 @@
-# AI Stock Analysis Dashboard
+## Disclaimer
 
-A Streamlit-based web application for technical stock analysis with AI-powered recommendations. Supports multiple languages and markets.
+This program is solely for demonstrating the application of Large Language Models (LLM) in technical indicator analysis and does not constitute any investment advice. Please note that LLMs still have high error rates in financial analysis. All analysis results are for reference only, and investment decisions should be made with careful consideration.
 
 ## Features
 

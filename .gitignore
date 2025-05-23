@@ -63,6 +63,7 @@ pyrightconfig.json
 
 # macOS
 .DS_Store
+Icon
 
 # Windows
 Thumbs.db
